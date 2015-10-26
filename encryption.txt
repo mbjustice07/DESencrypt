@@ -1,0 +1,20 @@
+      //deck 15
+		//line is the cleartest
+      //block size 64 bits
+      //feistel structure
+      //key size 56
+      //employ feistel network fragmenttation
+      //expand key for each of the 16 rounds, 56bits->(48 * 16)
+      //start:
+      //p box
+      //feistel function x 16, give each feistel a 48bit key
+      //       each side is 32bits
+      //       f function, ((DO NOT CHANGE FOR DECRYPTION))
+      //           permute 32 to 48bits
+      //           xor with the 48bit key
+      //           filter into 8 s-box, shrink to 32bits
+      //           permute 32bits to 32bits
+      //           done
+      //p-box, inverse of first
+      //done
+      //prepend the key to the front of the file
