@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import com.google.common.io.Files;
+//import com.google.common.io.Files;
 
 import gnu.getopt.Getopt;
 
@@ -99,7 +99,7 @@ public class DES_Skeleton {
 		for(i = 0; i < size; i++){
 			// make a new 64 bit message for manipulation
 			// to do this we create a new substring of the message
-			StringBuilder bit64Message, M, IP, L0, R0, LN, RN;
+			StringBuilder bit64Message = null, M = null, IP = null, L0 = null, R0 = null, LN = null, RN = null;
 			
 			// case 1 if the message is greater than 64-bits
 			if(currentLine.length() > 4){
@@ -138,7 +138,7 @@ public class DES_Skeleton {
 			
 			// Function F here!!
 			
-			return;
+			return null; //temp value
 	
 		}// END OF BIG FOR LOOP
 		
@@ -153,7 +153,7 @@ public class DES_Skeleton {
 	 * @return
 	 */
 	static StringBuilder fFunction(StringBuilder seg, int KNValue){
-		StringBuilder E;
+		StringBuilder E = null;
 		int i;
 		// we first get our E statement
 		for(i = 0; i < SBoxes.E.length; i++)
@@ -166,11 +166,13 @@ public class DES_Skeleton {
 		
 		System.out.println("EforXOR = " + EforXOR + "\nKNforXOR = "+ KNforXOR +  "\neXORkn = "+ eXORkn);
 		
+		return null;
+		
 	}/*fFunction*/
 
 
 	static void genDESkey(String keyStr){
-		StringBuilder hexStr, keyPlus, C0, D0;
+		StringBuilder hexStr = null, keyPlus = null, C0 = null, D0 = null;
 		StringBuilder[] CN = new StringBuilder[16], DN = new StringBuilder[16];//, KN = new StringBuilder[16];
 		int i , j; 
 
@@ -201,8 +203,8 @@ public class DES_Skeleton {
 		*/
 		for (i = 0; i < SBoxes.rotations.length; i++){
 			for (j = 0; j < SBoxes.rotations[i]; j++){
-				 CN[i] = C0 = C0.append( C0.charAt(j) ).deleteCharAt(j);
-				 DN[i] = D0 = D0.append( D0.charAt(j) ).deleteCharAt(j);	
+				 CN[i] = C0 = C0.append( C0.charAt(0) ).deleteCharAt(0);
+				 DN[i] = D0 = D0.append( D0.charAt(0) ).deleteCharAt(0);	
 				 System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
 				 System.out.println("DN["+ (i+1) + "] = " + printBinaryReadable(DN[i], 7) );
 			}
@@ -262,7 +264,7 @@ public class DES_Skeleton {
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
-		        	  genDESkey();
+		        	  //genDESkey();
 		        	  break;
 		          case 'h':
 		        	  callUseage(0);
@@ -309,10 +311,10 @@ public class DES_Skeleton {
 	 */
 	static String printBinaryReadable(StringBuilder binaryString, int spaceSize){
 		int i;
-		StringBuilder temp;
+		StringBuilder temp = null;
 		for (i = 0; i < binaryString.length(); i++){
 			if ( ( (i+1) % spaceSize ) == 0 )
-				temp = temp.append(" ");
+				temp = temp.append(" ").append(binaryString.charAt(i));
 			else
 				temp.append( binaryString.charAt(i) );
 		}
