@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,7 +25,11 @@ public class DES_Skeleton {
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
 		
+		System.out.println("Reached main. Starting getopts.");
+		
 		pcl(args, inputFile, outputFile, keyStr, encrypt);
+		
+		System.out.println("Finished getopts. Starting encrypt/decrypt.");
 		
 		if(keyStr.toString() != "" && encrypt.toString().equals("e")){
 			encrypt(keyStr, inputFile, outputFile);
@@ -32,12 +37,15 @@ public class DES_Skeleton {
 			decrypt(keyStr, inputFile, outputFile);
 		}
 		
-		
+		System.out.println("finished all operations");
 	}
 	
 
 	private static void decrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
+		
+		System.out.println("Started decrypt.");
+		
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
 			List<String> lines = Files.readAllLines(Paths.get(inputFile.toString()), Charset.defaultCharset());
@@ -52,7 +60,7 @@ public class DES_Skeleton {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("finished decrypt.");
 	}
 
 	/**
@@ -61,12 +69,16 @@ public class DES_Skeleton {
 	 */
 	private static String DES_decrypt(String iVStr, String line) {
 		
+		System.out.println("started decrypt generator. Currently empty. Returns null");
+		
 		return null;
 	}
 
 
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
+		
+		System.out.println("Started encrypt.");
 		
 		File f = new File(inputFile.toString() );
 		
@@ -82,13 +94,15 @@ public class DES_Skeleton {
 			e.printStackTrace();
 		}
 
-		
+		System.out.println("Finished encrypt.");
 	}
 	/**
 	 * TODO: You need to write the DES encryption here.
 	 * @param line
 	 */
 	private static String DES_encrypt(String line) {
+		
+		System.out.println("Started encrypt generator.");
 		
 		StringBuilder currentLine = new StringBuilder(line);
 		
@@ -157,9 +171,9 @@ public class DES_Skeleton {
 				}
 				
 				// we now need to XOR our LN and fFunctionResult
-				BigInteger leftN, fFunc, XORresult;
+				BigInteger leftN = null, fFunc = null, XORresult = null;
 				leftN = new BigInteger(LN.toString(), 2);
-				fFunc = new BigInteger(fFunc.toString(), 2);
+				fFunc = new BigInteger(fFunctionResult.toString(), 2);
 				XORresult = leftN.xor(fFunc);
 				
 				System.out.println("XORresult = " + XORresult.toString(2) + "\nXORresult not in string representation" + XORresult);
@@ -190,6 +204,8 @@ public class DES_Skeleton {
 	
 		}// END OF BIG FOR LOOP
 		
+		System.out.println("finished encrypt generator.");
+		
 		return output.toString();
 	}/*DES_encrypt*/
 	
@@ -201,6 +217,9 @@ public class DES_Skeleton {
 	 * @return
 	 */
 	static StringBuilder fFunction(StringBuilder seg, int KNValue){
+		
+		System.out.println("Started fFunction");
+		
 		StringBuilder E = null, forPBox = null, finalResult = null;
 		int i;
 		// we first get our E statement
@@ -261,34 +280,61 @@ public class DES_Skeleton {
 		
 		System.out.println("finalResult = " + printBinaryReadable(finalResult, 4) );
 		
+		System.out.println("fFunction ends.");
+		
 		return finalResult;
 		
 	}/*fFunction*/
 
 
+	
+	//ERROR: produces 31 bits of information using the key, "keys"
+	//       1101 0110 110 1010 1111 0010 1110 011
+	//Spec:
+	//     We need to generate our own key from the secureRandom package
 	static void genDESkey(String keyStr){
-		StringBuilder hexStr = null, keyPlus = null, C0 = null, D0 = null;
+		
+		System.out.println("generate DES key begins");
+		
+		StringBuilder hexStr = null, keyPlus = null, C0 = new StringBuilder(), D0 = new StringBuilder(); //FIXED: ASSUMED NOT NULL, WHEN NOT INSTANCED
 		StringBuilder[] CN = new StringBuilder[16], DN = new StringBuilder[16];//, KN = new StringBuilder[16];
 		int i , j; 
 
 		// This should convert the Hexadecimal string to a binary string 
 		//SEE METHOD
-	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(keyStr) );
+	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr)) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
 		System.out.println("hexStr = " + hexStr);
 		
 		// This will convert the 64-bit key to the 56-bit key as a StringBuilder-object
 		// Stringbuilder because Stringbuilder is mutable whereas String is not
-		for (i = 0; i < SBoxes.PC1.length; i++)
-			keyPlus.append( hexStr.charAt(SBoxes.PC1[i]) );
-		
+		for (i = 0; i < SBoxes.PC1.length; i++){
+			if(hexStr.length() > SBoxes.PC1[i] ){//FIXED: ASSUMED the value found at SBoxes.PC1[i] is within hexStr's bounds, when it would be greater
+                System.out.println("reached SBoxes loop, on loop " + i + "");
+				if(keyPlus == null){
+					System.out.println("keyPlus is no longer null.");
+					keyPlus = new StringBuilder(hexStr.charAt(SBoxes.PC1[i])); //FIXED: ASSUMED keyPlus was not null, when not instanced
+				}
+				else{
+					keyPlus.append( hexStr.charAt(SBoxes.PC1[i]) );
+				}
+
+			}
+		}
 		System.out.println("keyPlus = " + printBinaryReadable(keyPlus, 7));
 		
 		// This splits the 56-bit key into the to left and right keys of 28-bits
 		for (i = 0; i < SBoxes.PC1.length; i++){
-			if (i < (SBoxes.PC1.length/2) )
-				C0.append( keyPlus.charAt(i) );
-			else if ( i >= (SBoxes.PC1.length/2) )
-				D0.append( keyPlus.charAt(i) );
+			System.out.println("I'm traversing SBoxes.PC1 on loop: "+i+"");
+			if(keyPlus.length() > i){
+			   if (i < (SBoxes.PC1.length/2) ){
+				   System.out.println("appending to C0 on loop "+i+"");
+			      C0.append( keyPlus.charAt(i) );
+			   }
+			   else if ( i >= (SBoxes.PC1.length/2) ){
+				   System.out.println("appending to D0 on loop "+i+"");
+			      D0.append( keyPlus.charAt(i) );
+			   }
+			}
 		}
 		
 		System.out.println("C0 = " + printBinaryReadable(C0, 7) + "\n" + "D0 = " + printBinaryReadable(D0, 7) + "\n");
@@ -297,13 +343,18 @@ public class DES_Skeleton {
 		 * Stringbuilder array called CN and DN respectively 
 		*/
 		for (i = 0; i < SBoxes.rotations.length; i++){
-			for (j = 0; j < SBoxes.rotations[i]; j++){
+			System.out.println("Outer rotational loop at "+i+"");
+			for (j = 0; j < SBoxes.rotations[i]; j++){//FIXED: ASSUMED VALUE AT i IN SBOX WOULD BE AN INDEX IN C0/D0, WHEN THEY COULD NOT
+				System.out.println("Inner rotation loop at "+j+"");
+				 if(C0.length() > 0){
 				 CN[i] = C0 = C0.append( C0.charAt(0) ).deleteCharAt(0);
-				 DN[i] = D0 = D0.append( D0.charAt(0) ).deleteCharAt(0);	
 				 System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
+				 }
+				 if(D0.length() > 0){
+				 DN[i] = D0 = D0.append( D0.charAt(0) ).deleteCharAt(0);
 				 System.out.println("DN["+ (i+1) + "] = " + printBinaryReadable(DN[i], 7) );
+				 }
 			}
-				
 		}
 		System.out.println("");
 		
@@ -311,15 +362,20 @@ public class DES_Skeleton {
 		 * This converts our CN and DN into the final 48-bit key and stores it in StringBuilder KN
 		 */
 		for(j = 0; j < KN.length; j++){
+			System.out.println("outer key merge loop at "+j+"");
 			for (i = 0; i < SBoxes.PC2.length; i++)
-				if(i < CN[j].length() )
+				System.out.println("Inner key merge loop at "+i+"");
+				if(i < CN[j].length() && CN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length )
 					KN[j].append( CN[j].charAt(SBoxes.PC2[i]) );
-				else if (i >= DN[j].length() ){
+				else if (i >= DN[j].length() && DN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length ){//ONGOING: NULL POINTER EXCEPTION
 					KN[j].append( DN[j].charAt(SBoxes.PC2[i]) );
 				}
 			System.out.println("KN["+ (j+1)+ "] = " + printBinaryReadable(KN[j], 6) );
 		}
 		System.out.println("");
+		
+		System.out.println("generate DES key ends");
+		
 		return;
 	}
 
@@ -359,7 +415,7 @@ public class DES_Skeleton {
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
-		        	  //genDESkey();
+		        	  genDESkey("keys");//TEMP VALUE TO GENERATE A CONSTANT KEY
 		        	  break;
 		          case 'h':
 		        	  callUseage(0);
@@ -375,7 +431,7 @@ public class DES_Skeleton {
 	
 	private static void callUseage(int exitStatus) {
 		
-		String useage = "";
+		String useage = ""; //NEED TO FINISH USAGE STATEMENT
 		
 		System.err.println(useage);
 		System.exit(exitStatus);
@@ -386,7 +442,7 @@ public class DES_Skeleton {
 	 * hexToBin() courtesy of http://stackoverflow.com/questions/9246326/convert-hexadecimal-string-hex-to-a-binary-string
 	 */
 	static String hexToBin(String s) {
-			return new BigInteger(s, 16).toString(2);
+			return new BigInteger(s, 16).toString(2);//ASSUMES HEX VALUES, DOESN'T CHECK IF REGULAR VALUES ARE PASSED
 	}
 	
 	/**
@@ -405,14 +461,25 @@ public class DES_Skeleton {
 	 * @return This will make a binary output more easily readable to the tester
 	 */
 	static String printBinaryReadable(StringBuilder binaryString, int spaceSize){
+		
+		System.out.println("started printBinaryReadable");
+		
 		int i;
-		StringBuilder temp = null;
+		StringBuilder temp = new StringBuilder(); //FIXED: ASSUMED TEMP WAS NOT NULL, WHEN TEMP WAS NOT INSTANCED
+		System.out.println("");
 		for (i = 0; i < binaryString.length(); i++){
-			if ( ( (i+1) % spaceSize ) == 0 )
-				temp = temp.append(" ").append(binaryString.charAt(i));
-			else
-				temp.append( binaryString.charAt(i) );
+			   if ( ( (i+1) % spaceSize ) == 0 ){
+				   System.out.println("I append a space and a char at "+i+"");
+				   temp = temp.append(" ").append(binaryString.charAt(i));
+			   }
+			   else {
+				   System.out.println("I append to temp on "+i+"");
+				   temp.append( binaryString.charAt(i) );
+			   }
 		}
+		
+		System.out.println("finished printBinaryReadable");
+		
 		return temp.toString();
 	}
 	
