@@ -9,6 +9,7 @@ import java.util.List;
 
 //import com.google.common.io.Files;
 
+
 import gnu.getopt.Getopt;
 
 
@@ -92,27 +93,31 @@ public class DES_Skeleton {
 		StringBuilder currentLine = new StringBuilder(line);
 		
 		StringBuilder output = new StringBuilder();
-		int i, size = 1;
+		int i, size = (line.length() / 4);
+		
+		int numberCharsInText = 4;
+		
+		System.out.println("length of the line = " + line.length() + "\nsize is = " + size);
 		
 		// we may need to add padding the message here for a consistent 64-bit message
 		// java Charset means every Char is 16-bit value, we need only 4 chars at a time for the encryption
 		for(i = 0; i < size; i++){
 			// make a new 64 bit message for manipulation
 			// to do this we create a new substring of the message
-			StringBuilder bit64Message = null, M = null, IP = null, L0 = null, R0 = null, LN = null, RN = null;
+			StringBuilder bit64Message = null, M = null, IP = null, L0 = null, R0 = null, LN = null, RN = null, FP = null;
 			
 			// case 1 if the message is greater than 64-bits
-			if(currentLine.length() > 4){
+			if(currentLine.length() > numberCharsInText){
 				// create the new 64-bit message
-				bit64Message = new StringBuilder(currentLine.substring(0,3));
+				bit64Message = new StringBuilder(currentLine.substring(0,numberCharsInText-1));
 				// remove this segment from the currentLine holding the remainder of the message
-				currentLine.delete(0, 3);
+				currentLine.delete(0, numberCharsInText-1);
 			}
 			// Case 2 if the messages is smaller than 64-bits; add padding
 			else{
 				bit64Message = new StringBuilder(currentLine.substring(0, currentLine.length()));
 				// append 0's to the end of the 64-bit message
-				for (int j = 0; j < (4 - bit64Message.length()); j++)
+				for (int j = 0; j < (numberCharsInText - bit64Message.length()); j++)
 					bit64Message.append('\u0000');
 				currentLine.delete(0,currentLine.length());
 			}
@@ -136,13 +141,56 @@ public class DES_Skeleton {
 					R0.append( IP.charAt(i) );
 			}
 			
-			// Function F here!!
+			RN = R0;
+			LN = L0;
 			
-			return null; //temp value
+			for (i = 0; i < 16; i++){
+				
+				StringBuilder fFunctionResult = null;
+				
+				// carry out our fFunction
+				fFunctionResult = fFunction(RN , i);
+				
+				if (fFunctionResult == null){
+					System.out.println("Error in fFunction");
+					return null;
+				}
+				
+				// we now need to XOR our LN and fFunctionResult
+				BigInteger leftN, fFunc, XORresult;
+				leftN = new BigInteger(LN.toString(), 2);
+				fFunc = new BigInteger(fFunc.toString(), 2);
+				XORresult = leftN.xor(fFunc);
+				
+				System.out.println("XORresult = " + XORresult.toString(2) + "\nXORresult not in string representation" + XORresult);
+				
+				LN = RN;
+				RN = new StringBuilder(XORresult.toString(2));
+				
+			}
+			
+			System.out.println("Result of the 16 iteration of fFunction = " + printBinaryReadable(RN, 8) + printBinaryReadable(LN, 8) );
+			
+			RN.append(LN.toString());
+			
+			for(i = 0; i < SBoxes.FP.length; i++){
+				FP.append( RN.charAt(SBoxes.FP[i]) );
+			}
+			
+			System.out.println("After IP inverse (aka FP) we get = " + printBinaryReadable(FP, 4) + "\nNow converting to HEX" );
+			
+			byte[] byteForm = stringToByte(FP, 64);
+			
+			// convert the byte array to hex and return
+			String finalFinalFinal = new BigInteger(byteForm).toString(16);
+			
+			System.out.print("final result after everything = " + finalFinalFinal);
+			
+			output.append(finalFinalFinal);
 	
 		}// END OF BIG FOR LOOP
 		
-		return null;
+		return output.toString();
 	}/*DES_encrypt*/
 	
 	
@@ -153,20 +201,67 @@ public class DES_Skeleton {
 	 * @return
 	 */
 	static StringBuilder fFunction(StringBuilder seg, int KNValue){
-		StringBuilder E = null;
+		StringBuilder E = null, forPBox = null, finalResult = null;
 		int i;
 		// we first get our E statement
 		for(i = 0; i < SBoxes.E.length; i++)
 			E.append(seg.charAt(SBoxes.E[i]));
 		
 		// convert the string representation of the binary value to actual binary
+		// THIS MAY BE INCORRECT!
 		BigInteger EforXOR = new BigInteger(E.toString(),2);
 		BigInteger KNforXOR = new BigInteger(KN[KNValue].toString(), 2);
 		BigInteger eXORkn = KNforXOR.xor(EforXOR);
+		// turn the result in a stringbuilder for easier manipulation 
+		StringBuilder eKn = new StringBuilder(eXORkn.toString(2));
 		
 		System.out.println("EforXOR = " + EforXOR + "\nKNforXOR = "+ KNforXOR +  "\neXORkn = "+ eXORkn);
+		System.out.println("eKn = " + eKn);
 		
-		return null;
+		for(i = 0; i < 8; i++ ){
+			
+			StringBuilder firstBit = null, lastBit = null, columnNumber = null, rowNumber = null;
+			
+			// the substring values may need to be changed
+			firstBit = new StringBuilder(eKn.substring(0,0));
+			lastBit = new StringBuilder(eKn.substring(5,5));
+			
+			rowNumber.append(firstBit.toString()).append(lastBit.toString());
+			columnNumber = new StringBuilder(eKn.substring(1, 4));
+			
+			//chop off the first 6 bits now
+			eKn.delete(0,5);
+			
+			System.out.println("eKn after removing the first 6-bits = "+ eKn);
+			System.out.println("rowNumber  = "+ rowNumber +"\ncolumnNumber = "+ columnNumber);
+			
+			// now convert to decimal
+			int sBoxCell = fourBitIntConverter(columnNumber) * twoBitIntConverter(rowNumber);
+			if (sBoxCell == 0){
+				System.out.println("Error in fFunction at finding SBox Cell");
+				return null;
+			}
+			
+			//we use -1 because array index will be out of bounds otherwise
+			Integer sBoxResult = (int) SBoxes.S[i][sBoxCell - 1];
+			System.out.println("sBoxResult = " + sBoxResult);
+			
+			// now convert the integer to binary representation
+			StringBuilder sBoxOutput = new StringBuilder( hexToBin( stringToHex( sBoxResult.toString() ) ) );
+			System.out.println("sBoxOutput = " + printBinaryReadable( sBoxOutput, 4 ));
+			
+			forPBox.append( sBoxOutput.toString() );
+				
+		}
+		
+		System.out.println("forPBox result after SBox = " + forPBox);
+		
+		for( i = 0; i < SBoxes.P.length; i++)
+			finalResult.append( forPBox.charAt( SBoxes.P[i] ) );
+		
+		System.out.println("finalResult = " + printBinaryReadable(finalResult, 4) );
+		
+		return finalResult;
 		
 	}/*fFunction*/
 
@@ -319,6 +414,68 @@ public class DES_Skeleton {
 				temp.append( binaryString.charAt(i) );
 		}
 		return temp.toString();
+	}
+	
+	// I made these because i was worried java would translate "10101010" to ten million instead of a binary value
+	static int fourBitIntConverter(StringBuilder in ){
+		if(in.equals("0000"))
+			return 1;
+		else if( in.equals("0001"))
+			return 2;
+		else if( in.equals("0010"))
+			return 3;
+		else if( in.equals("0011"))
+			return 4;
+		else if( in.equals("0100"))
+			return 5;
+		else if( in.equals("0101"))
+			return 6;
+		else if( in.equals("0110"))
+			return 7;
+		else if( in.equals("0111"))
+			return 8;
+		else if( in.equals("1000"))
+			return 9;
+		else if( in.equals("1001"))
+			return 10;
+		else if( in.equals("1010"))
+			return 11;
+		else if( in.equals("1011"))
+			return 12;
+		else if( in.equals("1100"))
+			return 13;
+		else if( in.equals("1101"))
+			return 14;
+		else if( in.equals("1110"))
+			return 15;
+		else if( in.equals("1111"))
+			return 16;
+		
+		return 0;
+	}
+	
+	static int twoBitIntConverter(StringBuilder in ){
+		if( in.equals("00"))
+			return 1;
+		else if( in.equals("01"))
+			return 2;
+		else if( in.equals("10"))
+			return 3;
+		else if( in.equals("11"))
+			return 4;
+		
+		return 0;
+		
+	}
+	
+	static byte[] stringToByte(StringBuilder in, int lengthOfBitSeg){
+		byte[] finalVal = new byte[lengthOfBitSeg];
+		int i;
+		
+		for(i = 0; i < lengthOfBitSeg; i++)
+			finalVal[i] = (byte) ((in.charAt(i) == '1') ?  1 :  0);
+			
+		return finalVal;
 	}
 
 }
