@@ -298,8 +298,8 @@ public class DES_Skeleton {
 		BigInteger tempInt = new BigInteger("" +System.currentTimeMillis()+"");
 		SecureRandom rand = new SecureRandom(tempInt.toByteArray());
 		StringBuilder keyStr =new StringBuilder();
-		for(int k = 0; k < 9; k++){
-			keyStr.append(""+rand.nextInt(4)+"");
+		for(int k = 0; k < 8; k++){
+			keyStr.append(""+rand.nextInt(8)+"");
 		}
 		
 		StringBuilder hexStr = null, keyPlus = null, C0 = new StringBuilder(), D0 = new StringBuilder(); //FIXED: ASSUMED NOT NULL, WHEN NOT INSTANCED
@@ -364,9 +364,7 @@ public class DES_Skeleton {
 		 * This converts our CN and DN into the final 48-bit key and stores it in StringBuilder KN
 		 */
 		for(j = 0; j < KN.length; j++){
-			System.out.println("outer key merge loop at "+j+"");
 			for (i = 0; i < SBoxes.PC2.length; i++)
-				System.out.println("Inner key merge loop at "+i+"");
 				if(i < CN[j].length() && CN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length )
 					KN[j].append( CN[j].charAt(SBoxes.PC2[i]) );
 				else if (i >= DN[j].length() && DN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length ){//ONGOING: NULL POINTER EXCEPTION
