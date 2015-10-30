@@ -415,7 +415,7 @@ public class DES_Skeleton {
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
-		        	  genDESkey();//TEMP VALUE TO GENERATE A CONSTANT KEY
+		        	  genDESkey();
 		        	  break;
 		          case 'h':
 		        	  callUseage(0);
@@ -431,7 +431,16 @@ public class DES_Skeleton {
 	
 	private static void callUseage(int exitStatus) {
 		
-		String useage = ""; //NEED TO FINISH USAGE STATEMENT
+		String useage = "Welcome to the help page.\n"
+				+ "The following options are available:\n"
+				+ "java DES -h,\n"
+				+ "            will generate the message you're currently reading!\n"
+				+ "java DES -k,\n"
+				+ "            generate a new DES 56bit key.\n"
+				+ "java DES -e <64_bit_key_in_hex> -i <input_file> -o <output_file>,\n"
+				+ "            will encrypt input_file using 64_bit_key_in_hex and output it to output_file.\n"
+				+ "java DES -d <64_bit_key_in_hex> -i <input_file> -o <output_file>,\n"
+				+ "            will decrypt input_file using 64_bit_key_in_hex and output it to output_file.\n";
 		
 		System.err.println(useage);
 		System.exit(exitStatus);
