@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-
+import java.security.SecureRandom;
 //import com.google.common.io.Files;
 
 
@@ -118,7 +118,8 @@ public class DES_Skeleton {
 		for(i = 0; i < size; i++){
 			// make a new 64 bit message for manipulation
 			// to do this we create a new substring of the message
-			StringBuilder bit64Message = null, M = null, IP = null, L0 = null, R0 = null, LN = null, RN = null, FP = null;
+			StringBuilder bit64Message = new StringBuilder(), M = new StringBuilder(), IP = new StringBuilder(), L0 = new StringBuilder();
+			StringBuilder R0 = new StringBuilder(), LN = new StringBuilder(), RN = new StringBuilder(), FP = new StringBuilder();
 			
 			// case 1 if the message is greater than 64-bits
 			if(currentLine.length() > numberCharsInText){
@@ -220,7 +221,7 @@ public class DES_Skeleton {
 		
 		System.out.println("Started fFunction");
 		
-		StringBuilder E = null, forPBox = null, finalResult = null;
+		StringBuilder E = new StringBuilder(), forPBox = new StringBuilder(), finalResult = new StringBuilder();
 		int i;
 		// we first get our E statement
 		for(i = 0; i < SBoxes.E.length; i++)
@@ -239,7 +240,7 @@ public class DES_Skeleton {
 		
 		for(i = 0; i < 8; i++ ){
 			
-			StringBuilder firstBit = null, lastBit = null, columnNumber = null, rowNumber = null;
+			StringBuilder firstBit = new StringBuilder(), lastBit = new StringBuilder(), columnNumber = new StringBuilder(), rowNumber = new StringBuilder();
 			
 			// the substring values may need to be changed
 			firstBit = new StringBuilder(eKn.substring(0,0));
@@ -286,15 +287,20 @@ public class DES_Skeleton {
 		
 	}/*fFunction*/
 
-
-	
-	//ERROR: produces 31 bits of information using the key, "keys"
-	//       1101 0110 110 1010 1111 0010 1110 011
-	//Spec:
-	//     We need to generate our own key from the secureRandom package
-	static void genDESkey(String keyStr){
+	static void genDESkey(){
 		
 		System.out.println("generate DES key begins");
+		
+		//setup secureRandom to produce a 56bit value:
+		//generate a value based on the current time then,
+		//generate a secureRandom object with a seed based on the current time
+		//generate a 56 bit value, 8 x a random int based on 4bits, and places it in keyStr
+		BigInteger tempInt = new BigInteger("" +System.currentTimeMillis()+"");
+		SecureRandom rand = new SecureRandom(tempInt.toByteArray());
+		StringBuilder keyStr =new StringBuilder();
+		for(int k = 0; k < 9; k++){
+			keyStr.append(""+rand.nextInt(4)+"");
+		}
 		
 		StringBuilder hexStr = null, keyPlus = null, C0 = new StringBuilder(), D0 = new StringBuilder(); //FIXED: ASSUMED NOT NULL, WHEN NOT INSTANCED
 		StringBuilder[] CN = new StringBuilder[16], DN = new StringBuilder[16];//, KN = new StringBuilder[16];
@@ -302,7 +308,8 @@ public class DES_Skeleton {
 
 		// This should convert the Hexadecimal string to a binary string 
 		//SEE METHOD
-	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr)) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
+		System.out.println("The value of keyStr: "+keyStr);
+	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr.toString())) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
 		System.out.println("hexStr = " + hexStr);
 		
 		// This will convert the 64-bit key to the 56-bit key as a StringBuilder-object
@@ -415,7 +422,7 @@ public class DES_Skeleton {
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
-		        	  genDESkey("keys");//TEMP VALUE TO GENERATE A CONSTANT KEY
+		        	  genDESkey();//TEMP VALUE TO GENERATE A CONSTANT KEY
 		        	  break;
 		          case 'h':
 		        	  callUseage(0);
