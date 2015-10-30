@@ -11,10 +11,14 @@ import java.security.SecureRandom;
 //import com.google.common.io.Files;
 
 
+
 import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
+	
+	static boolean Debug = false;
+	static boolean Debug2 = false;
 
 	static StringBuilder[] KN = new StringBuilder[16];
 	
@@ -24,6 +28,9 @@ public class DES_Skeleton {
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
+		
+		for(int i = 0; i < 16; i++)
+			KN[i] = new StringBuilder();
 		
 		System.out.println("Reached main. Starting getopts.");
 		
@@ -110,8 +117,8 @@ public class DES_Skeleton {
 		int i, size = (line.length() / 4);
 		
 		int numberCharsInText = 4;
-		
-		System.out.println("length of the line = " + line.length() + "\nsize is = " + size);
+		if(Debug)
+			System.out.println("length of the line = " + line.length() + "\nsize is = " + size);
 		
 		// we may need to add padding the message here for a consistent 64-bit message
 		// java Charset means every Char is 16-bit value, we need only 4 chars at a time for the encryption
@@ -136,16 +143,18 @@ public class DES_Skeleton {
 					bit64Message.append('\u0000');
 				currentLine.delete(0,currentLine.length());
 			}
-			
+			if(Debug)
 			System.out.println("64-bit message is = " + bit64Message);
 			
 			// Making M
 			M = new StringBuilder( DES_Skeleton.hexToBin( DES_Skeleton.stringToHex(bit64Message.toString() ) ) );
+			if(Debug)
 			System.out.println("64-bit binary is = " + printBinaryReadable(M, 8));
 			
 			//Making IP
 			for(i = 0; i < SBoxes.IP.length; i++)
 				IP.append(M.charAt( SBoxes.IP[i] ) );
+			if(Debug)
 			System.out.println("IP binary is = " + printBinaryReadable(IP, 8) );
 			
 			// This splits the 64-bit key into the to left and right keys of 32-bits
@@ -176,14 +185,14 @@ public class DES_Skeleton {
 				leftN = new BigInteger(LN.toString(), 2);
 				fFunc = new BigInteger(fFunctionResult.toString(), 2);
 				XORresult = leftN.xor(fFunc);
-				
+				if(Debug)
 				System.out.println("XORresult = " + XORresult.toString(2) + "\nXORresult not in string representation" + XORresult);
 				
 				LN = RN;
 				RN = new StringBuilder(XORresult.toString(2));
 				
 			}
-			
+			if(Debug)
 			System.out.println("Result of the 16 iteration of fFunction = " + printBinaryReadable(RN, 8) + printBinaryReadable(LN, 8) );
 			
 			RN.append(LN.toString());
@@ -191,14 +200,14 @@ public class DES_Skeleton {
 			for(i = 0; i < SBoxes.FP.length; i++){
 				FP.append( RN.charAt(SBoxes.FP[i]) );
 			}
-			
+			if(Debug)
 			System.out.println("After IP inverse (aka FP) we get = " + printBinaryReadable(FP, 4) + "\nNow converting to HEX" );
 			
 			byte[] byteForm = stringToByte(FP, 64);
 			
 			// convert the byte array to hex and return
 			String finalFinalFinal = new BigInteger(byteForm).toString(16);
-			
+			if(Debug)
 			System.out.print("final result after everything = " + finalFinalFinal);
 			
 			output.append(finalFinalFinal);
@@ -286,7 +295,11 @@ public class DES_Skeleton {
 		return finalResult;
 		
 	}/*fFunction*/
-
+	
+	
+/**
+ * 
+ */
 	static void genDESkey(){
 		
 		System.out.println("generate DES key begins");
@@ -298,36 +311,48 @@ public class DES_Skeleton {
 		BigInteger tempInt = new BigInteger("" +System.currentTimeMillis()+"");
 		SecureRandom rand = new SecureRandom(tempInt.toByteArray());
 		StringBuilder keyStr =new StringBuilder();
-		for(int k = 0; k < 8; k++){
-			keyStr.append(""+rand.nextInt(8)+"");
+		for(int k = 0; k < 30; k++){
+			keyStr.append(""+rand.nextInt(4)+"");
 		}
+		keyStr = new StringBuilder(keyStr.substring(0,30 ));
 		
-		StringBuilder hexStr = null, keyPlus = null, C0 = new StringBuilder(), D0 = new StringBuilder(); //FIXED: ASSUMED NOT NULL, WHEN NOT INSTANCED
+		
+		
+		StringBuilder hexStr = null, keyPlus = new StringBuilder(), C0 = new StringBuilder(), D0 = new StringBuilder(); //FIXED: ASSUMED NOT NULL, WHEN NOT INSTANCED
 		StringBuilder[] CN = new StringBuilder[16], DN = new StringBuilder[16];//, KN = new StringBuilder[16];
+		
 		int i , j; 
+		
+		
 
 		// This should convert the Hexadecimal string to a binary string 
 		//SEE METHOD
-		System.out.println("The value of keyStr: "+keyStr);
-	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr.toString())) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
-		System.out.println("hexStr = " + hexStr);
+		if(Debug)
+			System.out.println("The value of keyStr: "+keyStr);
+		StringBuilder hexPrint = new StringBuilder("" + new BigInteger(keyStr.toString(), 10 ));
+		 hexPrint = new StringBuilder(hexPrint.substring(0, 16));
+		 BigInteger hexOutput = new BigInteger(hexPrint.toString(), 10 );
+		// System.out.println("length = " + hexOutput.toString().length());
+		System.out.printf("%x\n" , hexOutput ) ;
+	    //hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr.toString())) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
+        hexStr = new StringBuilder(DES_Skeleton.hexToBin(""+ new BigInteger(keyStr.toString(), 10 )));
+        hexStr = new StringBuilder(hexStr.substring(0,64));
+     
+		if(Debug)
+	    	System.out.println("hexStr = " + printBinaryReadable(hexStr , 8));
 		
 		//THIS PC1 BOX WILL REDUCE THE SIZE OF A RANDOM VALUE TO 56BITS, IF AND ONLY IF, THAT VALUE IS GREATER THAN 56BITS
 		// This will convert the 64-bit key to the 56-bit key as a StringBuilder-object
 		// Stringbuilder because Stringbuilder is mutable whereas String is not
 		for (i = 0; i < SBoxes.PC1.length; i++){
-			if(hexStr.length() > SBoxes.PC1[i] ){//FIXED: ASSUMED the value found at SBoxes.PC1[i] is within hexStr's bounds, when it would be greater
-				if(keyPlus == null){
-					System.out.println("keyPlus is no longer null.");
-					keyPlus = new StringBuilder(hexStr.charAt(SBoxes.PC1[i])); //FIXED: ASSUMED keyPlus was not null, when not instanced
-				}
-				else{
-					keyPlus.append( hexStr.charAt(SBoxes.PC1[i]) );
-				}
+			if(hexStr.length() >= SBoxes.PC1[i] ){//FIXED: ASSUMED the value found at SBoxes.PC1[i] is within hexStr's bounds, when it would be greater
+					keyPlus.append( hexStr.charAt(SBoxes.PC1[i] - 1) );
+				
 
 			}
 		}
-		System.out.println("keyPlus = " + printBinaryReadable(keyPlus, 7));
+		if(Debug)
+			System.out.println("keyPlus = " + printBinaryReadable(keyPlus, 7));
 		
 		// This splits the 56-bit key into the to left and right keys of 28-bits
 		for (i = 0; i < SBoxes.PC1.length; i++){
@@ -340,44 +365,85 @@ public class DES_Skeleton {
 			   }
 			}
 		}
-		
-		System.out.println("C0 = " + printBinaryReadable(C0, 7) + "\n" + "D0 = " + printBinaryReadable(D0, 7) + "\n");
+		if(Debug)
+			System.out.println("C0 = " + printBinaryReadable(C0, 7) + "\n" + "D0 = " + printBinaryReadable(D0, 7) + "\n");
 		
 		/* This is the rotation of the keys as it is in PC2 and will store them in a
 		 * Stringbuilder array called CN and DN respectively 
 		*/
-		for (i = 0; i < SBoxes.rotations.length; i++){
-			for (j = 0; j < SBoxes.rotations[i]; j++){//FIXED: ASSUMED VALUE AT i IN SBOX WOULD BE AN INDEX IN C0/D0, WHEN THEY COULD NOT
-				 if(C0.length() > 0){
-				 CN[i] = C0 = C0.append( C0.charAt(0) ).deleteCharAt(0);
-				 System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
-				 }
-				 if(D0.length() > 0){
-				 DN[i] = D0 = D0.append( D0.charAt(0) ).deleteCharAt(0);
-				 System.out.println("DN["+ (i+1) + "] = " + printBinaryReadable(DN[i], 7) );
-				 }
+		//is cloning the last value onto the entire array somehow
+		for (i = 0; i < 16; i++){
+			CN[i] = new StringBuilder();
+			DN[i] = new StringBuilder();
+			//System.out.println("Current outer loop: "+i);
+			for (j = 0; j < SBoxes.rotations[i]; j++){
+				 //System.out.println("The loop is: "+ j);
+			     C0.append( C0.charAt(0) );
+			     C0.deleteCharAt(0); 
+				 CN[i].delete(0, CN[i].length());
+				 CN[i].append(C0); 
+				 
+				 D0.append( D0.charAt(0) );
+				 D0.deleteCharAt(0);
+				 DN[i].delete(0, DN[i].length());
+				 DN[i].append(D0);
+				 
 			}
+			if(Debug2)
+				System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
+			if(Debug2)
+				System.out.println("DN["+ (i+1) + "] = " + printBinaryReadable(DN[i], 7) );
 		}
-		System.out.println("");
+		
+		
 		
 		/*
 		 * This converts our CN and DN into the final 48-bit key and stores it in StringBuilder KN
 		 */
-		for(j = 0; j < KN.length; j++){
+		/*for(j = 0; j < KN.length; j++){
 			for (i = 0; i < SBoxes.PC2.length; i++)
-				if(i < CN[j].length() && CN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length )
+				if( ( i < CN[j].length() ) )// && (CN[j].length() > SBoxes.PC2[i]) && (i < SBoxes.PC2.length ) )
 					KN[j].append( CN[j].charAt(SBoxes.PC2[i]) );
-				else if (i >= DN[j].length() && DN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length ){//ONGOING: NULL POINTER EXCEPTION
-					KN[j].append( DN[j].charAt(SBoxes.PC2[i]) );
+				else if (i >= DN[j - CN[j].length()].length() ){// && DN[j].length() > SBoxes.PC2[i] && i < SBoxes.PC2.length ){//ONGOING: NULL POINTER EXCEPTION
+					KN[j].append( DN[j - CN[j].length()].charAt(SBoxes.PC2[i]) );
 				}
 			System.out.println("KN["+ (j+1)+ "] = " + printBinaryReadable(KN[j], 6) );
+		}*/
+		
+		StringBuilder[] KNtemp = new StringBuilder[16];
+		
+		//initialize our new KNtemp to first merge CN and DN values
+		for(i = 0; i < 16; i++)
+			KNtemp[i] = new StringBuilder();
+		
+		
+		for(i = 0; i < 16; i++){
+			//System.out.println("loop count of merge loop"+i+"");
+			KNtemp[i].append(CN[i]);
+			//System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
+			KNtemp[i].append(DN[i]);
+			//System.out.println("DN["+ (i+1) + "] = " + printBinaryReadable(DN[i], 7) );
+			if(Debug2)
+				System.out.println("KNtemp["+ (i+1)+ "] = " + printBinaryReadable(KNtemp[i], 7) );
+			
 		}
+		
+		for(i = 0; i < 16; i++){
+			for( j = 0; j < 48; j++){
+				KN[i].append( KNtemp[i].charAt( SBoxes.PC2[j] -1 ) );
+			}
+			if(Debug2)
+				System.out.println("KN["+ (i+1)+ "] = " + printBinaryReadable(KN[i], 6) );
+		}
+		
 		System.out.println("");
 		
+		
+	
 		System.out.println("generate DES key ends");
 		
 		return;
-	}
+	}/*genkey*/
 
 
 	/**
@@ -451,7 +517,7 @@ public class DES_Skeleton {
 	 * hexToBin() courtesy of http://stackoverflow.com/questions/9246326/convert-hexadecimal-string-hex-to-a-binary-string
 	 */
 	static String hexToBin(String s) {
-			return new BigInteger(s, 16).toString(2);//ASSUMES HEX VALUES, DOESN'T CHECK IF REGULAR VALUES ARE PASSED
+			return new BigInteger(s, 10).toString(2);//ASSUMES HEX VALUES, DOESN'T CHECK IF REGULAR VALUES ARE PASSED
 	}
 	
 	/**
@@ -460,7 +526,7 @@ public class DES_Skeleton {
 	 * @return
 	 */
 	static public String stringToHex(String arg) {
-	    return String.format("%x"/*"%040x"*/, new BigInteger(1, arg.getBytes( Charset.defaultCharset() ) ) );
+	    return String.format("%x"/*"%040x"*/, new BigInteger( arg.getBytes( Charset.defaultCharset() ) ), 10  );
 	}
 	
 	/**
@@ -471,13 +537,13 @@ public class DES_Skeleton {
 	 */
 	static String printBinaryReadable(StringBuilder binaryString, int spaceSize){
 		
-		System.out.println("started printBinaryReadable");
+		//System.out.println("started printBinaryReadable");
 		
 		int i;
 		StringBuilder temp = new StringBuilder(); //FIXED: ASSUMED TEMP WAS NOT NULL, WHEN TEMP WAS NOT INSTANCED
 		System.out.println("");
 		for (i = 0; i < binaryString.length(); i++){
-			   if ( ( (i+1) % spaceSize ) == 0 ){
+			   if ( ( (i) % spaceSize ) == 0 ){
 				   temp = temp.append(" ").append(binaryString.charAt(i));
 			   }
 			   else {
@@ -485,47 +551,84 @@ public class DES_Skeleton {
 			   }
 		}
 		
-		System.out.println("finished printBinaryReadable");
+		//System.out.println("finished printBinaryReadable");
 		
 		return temp.toString();
 	}
 	
 	// I made these because i was worried java would translate "10101010" to ten million instead of a binary value
 	static int fourBitIntConverter(StringBuilder in ){
-		if(in.equals("0000"))
+		if(in.toString().equals("0000"))
 			return 1;
 		else if( in.equals("0001"))
 			return 2;
-		else if( in.equals("0010"))
+		else if( in.toString().equals("0010"))
 			return 3;
-		else if( in.equals("0011"))
+		else if( in.toString().equals("0011"))
 			return 4;
-		else if( in.equals("0100"))
+		else if( in.toString().equals("0100"))
 			return 5;
-		else if( in.equals("0101"))
+		else if( in.toString().equals("0101"))
 			return 6;
-		else if( in.equals("0110"))
+		else if( in.toString().equals("0110"))
 			return 7;
-		else if( in.equals("0111"))
+		else if( in.toString().equals("0111"))
 			return 8;
-		else if( in.equals("1000"))
+		else if( in.toString().equals("1000"))
 			return 9;
-		else if( in.equals("1001"))
+		else if( in.toString().equals("1001"))
 			return 10;
-		else if( in.equals("1010"))
+		else if( in.toString().equals("1010"))
 			return 11;
-		else if( in.equals("1011"))
+		else if( in.toString().equals("1011"))
 			return 12;
-		else if( in.equals("1100"))
+		else if( in.toString().equals("1100"))
 			return 13;
-		else if( in.equals("1101"))
+		else if( in.toString().equals("1101"))
 			return 14;
-		else if( in.equals("1110"))
+		else if( in.toString().equals("1110"))
 			return 15;
-		else if( in.equals("1111"))
+		else if( in.toString().equals("1111"))
 			return 16;
 		
 		return 0;
+	}
+	
+	static StringBuilder fourBitHexConverter(StringBuilder in ){
+		if(in.toString().equals("0000"))
+			return new StringBuilder("0");
+		else if( in.toString().equals("0001"))
+			return new StringBuilder("1");
+		else if( in.toString().equals("0010"))
+			return new StringBuilder("2");
+		else if( in.toString().equals("0011"))
+			return new StringBuilder("3");
+		else if( in.toString().equals("0100"))
+			return new StringBuilder("4");
+		else if( in.toString().equals("0101"))
+			return new StringBuilder("5");
+		else if( in.toString().equals("0110"))
+			return new StringBuilder("6");
+		else if( in.toString().equals("0111"))
+			return new StringBuilder("7");
+		else if( in.toString().equals("1000"))
+			return new StringBuilder("8");
+		else if( in.toString().equals("1001"))
+			return new StringBuilder("9");
+		else if( in.toString().equals("1010"))
+			return new StringBuilder("A");
+		else if( in.toString().equals("1011"))
+			return new StringBuilder("B");
+		else if( in.toString().equals("1100"))
+			return new StringBuilder("C");
+		else if( in.toString().equals("1101"))
+			return new StringBuilder("D");
+		else if( in.toString().equals("1110"))
+			return new StringBuilder("E");
+		else if( in.toString().equals("1111"))
+			return new StringBuilder("F");
+		
+		return new StringBuilder("oh no ");
 	}
 	
 	static int twoBitIntConverter(StringBuilder in ){
