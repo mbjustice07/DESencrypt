@@ -312,11 +312,11 @@ public class DES_Skeleton {
 	    hexStr = new StringBuilder( DES_Skeleton.hexToBin(DES_Skeleton.stringToHex(keyStr.toString())) ); //FIXED: ASSUMED THE KEY WOULD BE IN HEX, WHEN IN THE FORM STRING
 		System.out.println("hexStr = " + hexStr);
 		
+		//THIS PC1 BOX WILL REDUCE THE SIZE OF A RANDOM VALUE TO 56BITS, IF AND ONLY IF, THAT VALUE IS GREATER THAN 56BITS
 		// This will convert the 64-bit key to the 56-bit key as a StringBuilder-object
 		// Stringbuilder because Stringbuilder is mutable whereas String is not
 		for (i = 0; i < SBoxes.PC1.length; i++){
 			if(hexStr.length() > SBoxes.PC1[i] ){//FIXED: ASSUMED the value found at SBoxes.PC1[i] is within hexStr's bounds, when it would be greater
-                System.out.println("reached SBoxes loop, on loop " + i + "");
 				if(keyPlus == null){
 					System.out.println("keyPlus is no longer null.");
 					keyPlus = new StringBuilder(hexStr.charAt(SBoxes.PC1[i])); //FIXED: ASSUMED keyPlus was not null, when not instanced
@@ -331,14 +331,11 @@ public class DES_Skeleton {
 		
 		// This splits the 56-bit key into the to left and right keys of 28-bits
 		for (i = 0; i < SBoxes.PC1.length; i++){
-			System.out.println("I'm traversing SBoxes.PC1 on loop: "+i+"");
 			if(keyPlus.length() > i){
 			   if (i < (SBoxes.PC1.length/2) ){
-				   System.out.println("appending to C0 on loop "+i+"");
 			      C0.append( keyPlus.charAt(i) );
 			   }
 			   else if ( i >= (SBoxes.PC1.length/2) ){
-				   System.out.println("appending to D0 on loop "+i+"");
 			      D0.append( keyPlus.charAt(i) );
 			   }
 			}
@@ -350,9 +347,7 @@ public class DES_Skeleton {
 		 * Stringbuilder array called CN and DN respectively 
 		*/
 		for (i = 0; i < SBoxes.rotations.length; i++){
-			System.out.println("Outer rotational loop at "+i+"");
 			for (j = 0; j < SBoxes.rotations[i]; j++){//FIXED: ASSUMED VALUE AT i IN SBOX WOULD BE AN INDEX IN C0/D0, WHEN THEY COULD NOT
-				System.out.println("Inner rotation loop at "+j+"");
 				 if(C0.length() > 0){
 				 CN[i] = C0 = C0.append( C0.charAt(0) ).deleteCharAt(0);
 				 System.out.println("CN["+ (i+1) + "] = " + printBinaryReadable(CN[i], 7) );
@@ -476,11 +471,9 @@ public class DES_Skeleton {
 		System.out.println("");
 		for (i = 0; i < binaryString.length(); i++){
 			   if ( ( (i+1) % spaceSize ) == 0 ){
-				   System.out.println("I append a space and a char at "+i+"");
 				   temp = temp.append(" ").append(binaryString.charAt(i));
 			   }
 			   else {
-				   System.out.println("I append to temp on "+i+"");
 				   temp.append( binaryString.charAt(i) );
 			   }
 		}
