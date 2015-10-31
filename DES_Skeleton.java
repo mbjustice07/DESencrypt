@@ -667,10 +667,10 @@ public class DES_Skeleton {
 				System.out.println("Error in fFunction at finding SBox Cell");
 				return null;
 			}
-			
+			System.out.println("The value of the sBox"+sBoxCell);
 			//we use -1 because array index will be out of bounds otherwise
 			long[] tempByte = new long[1];
-			tempByte[0] = SBoxes.S[i][sBoxCell - 1];
+			tempByte[0] = SBoxes.S[i][sBoxCell];
 			BitSet newValue = new BitSet(16);
 			newValue = BitSet.valueOf(tempByte);
 			System.out.println("sBoxResult = " + newValue.toString());
