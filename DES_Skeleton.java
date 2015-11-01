@@ -64,7 +64,7 @@ public class DES_Skeleton {
 		}
 		System.out.println("finished decrypt.");
 	}
-
+//*********************************************************************************************
 	/**
 	 * TODO: You need to write the DES encryption here.
 	 * 
@@ -77,36 +77,41 @@ public class DES_Skeleton {
 
 		return null;
 	}
-
+//**********************************************************************************************
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
 
 		System.out.println("Started encrypt.");
 
 		File f = new File(inputFile.toString());
+		File out = new File(outputFile.toString());
 
 		try {
-			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+			@SuppressWarnings("resource")
+			PrintWriter writer = new PrintWriter(out, "UTF-8");
 
 			String encryptedText;
 			for (String line : Files.readAllLines(
 					Paths.get(inputFile.toString()), Charset.defaultCharset())) {
 				encryptedText = DES_encrypt(keyStr, line);
-				writer.print(encryptedText);
+				//System.out.println("output file = "+ outputFile+ " in encrypt " + encryptedText);
+				writer.println(encryptedText);
+				
 			}
+			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+			
 		System.out.println("Finished encrypt.");
 	}
-
+//********************************************************************************************
 	/**
 	 * TODO: You need to write the DES encryption here.
 	 * 
-	 * @param line
+	 * @param plainText
 	 */
-	private static String DES_encrypt(StringBuilder keyStr, String line) {
+	private static String DES_encrypt(StringBuilder keyStr, String plainText) {
 
 		// At this point in time:
 		// keyStr is the first argument passed into java DES
@@ -115,7 +120,7 @@ public class DES_Skeleton {
 		//
 		// Our string output will be written to output
 
-		System.out.println("Started encrypt generator.");
+		//System.out.println("Started encrypt generator.");
 
 		// key expansion code here
 		StringBuilder keyStrTemp = new StringBuilder(), hexStr = new StringBuilder(), keyPlus = new StringBuilder(), C0 = new StringBuilder(), D0 = new StringBuilder();
@@ -124,7 +129,7 @@ public class DES_Skeleton {
 
 		keyStrTemp.append(keyStr);
 
-		System.out.println("The given key is " + keyStr);
+		//System.out.println("The given key is " + keyStr);
 
 		for (i = 0; i < keyStr.length(); i++) {
 			hexStr.append(DES_Skeleton.hexFourBitConverter(new StringBuilder(
@@ -208,15 +213,15 @@ public class DES_Skeleton {
 				System.out.println("KN[" + (i + 1) + "] = "
 						+ printBinaryReadable(KN[i], 6));
 		}
-		System.out.println("");
-		System.out.println("Finished key expansion!");
+		//System.out.println("");
+		//System.out.println("Finished key expansion!");
 		// KN[], now holds 16 48bit keys in the locations 0-15
 		// end of key expansion code
-		// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-		StringBuilder currentLine = new StringBuilder(line);
+		//StringBuilder currentLine = new StringBuilder(plainText);
 		StringBuilder output = new StringBuilder();
-		int size = 0;
+		int loopSize = 0;
 		
 		// line2 contains the line just read in as a bitset
 		//can't do this.
@@ -226,44 +231,49 @@ public class DES_Skeleton {
 		//need a substring of a correct number of bits, 64
 		// or as many as can be given
 		// the bitset will
-		BitSet line2 = BitSet.valueOf(line.getBytes());
+		
+		//BitSet line2 = BitSet.valueOf(line.getBytes());
 		// the size here for determining how long we are running our loop
-		size = line2.length() / 64;
+		loopSize = plainText.length() / 8 + 1;
 		// this checks for the case if our integer division returns a 0 and the
 		// line2.size
-		if (line2.length() != 0 && size == 0)
-			size = 1;
+		if (loopSize == 0 && plainText.length() != 0)
+			loopSize = 1;
+		int forloop;
 		int numberBitsInText = 64;
-		System.out.println("length of the line = " + line.length()
-				+ "\nsize is = " + size);
+		//System.out.println("length of the line = " + plainText.length()
+		//		+ "\nloopsize is = " + loopSize);
 		// we may need to add padding the message here for a consistent 64-bit
 		// message
-		for (i = 0; i < size; i++) {
-			// make a new 64 bit message for manipulation
-			// to do this we create a new substring of the message
+		for (forloop = 0; forloop < loopSize; forloop++) {
+
 			BitSet bit64Message = new BitSet(64), M = new BitSet(64), IP = new BitSet(
 					64), L0 = new BitSet(32), R0 = new BitSet(32), LN = new BitSet(
 					32), RN = new BitSet(32), FP = new BitSet(32);
-			// case 1 if the message is greater than 64-bits
-			if (line2.length() > numberBitsInText) {
-				// create the new 64-bit message
-				bit64Message = line2.get(0, 64);// new
-				// remove this segment from the currentLine holding the
-				// remainder of the message
-				line2 = line2.get(64, line2.length());
+			
+			byte[] byteFormPlainText = new byte[64];
+			//System.out.println("byteformplaintext length = " + byteFormPlainText.length );
+			/*
+			 * 
+			 */
+			if (plainText.length() > 8){
+				byteFormPlainText = plainText.substring(0, 8).getBytes();
 			}
-			// Case 2 if the messages is smaller than 64-bits; add padding
-			else {
-				bit64Message = line2.get(0, line2.length());// new
-				// append 0's to the end of the 64-bit message
-				BitSet padding = new BitSet(64);
-				padding.or(bit64Message);// append('\u0000');//technically, bit64Message should be padded with zeroes already.
-				bit64Message = padding;
-				line2 = line2.get(64, line2.length());
+			else if (plainText.length() < 8){
+				byteFormPlainText = plainText.substring( 0, plainText.length() ).getBytes();
 			}
+			
+			if (plainText.length() > 16)
+				plainText = plainText.substring(8, plainText.length());
+			else if( plainText.length() < 16){
+				if (plainText.length() > 8)
+					plainText = plainText.substring(8, plainText.length());
+			}
+			
+			bit64Message = BitSet.valueOf(byteFormPlainText);
 			// if(Debug)
-			System.out.println("64-bit binary message is = "
-					+ bit64Message.toString());
+			//System.out.println("64-bit binary message is = "
+			//		+ bit64Message.toString() + "\n64-bit length = " + bit64Message.length());
 			// Making M
 			/*
 			 * StringBuilder temp = new StringBuilder(
@@ -275,11 +285,12 @@ public class DES_Skeleton {
 			 */
 			// if(Debug)
 			// Making IP
-			for (i = 0; i < SBoxes.IP.length; i++)
+			int ff;
+			for (ff = 0; ff < SBoxes.IP.length; ff++)
 				// bit64messages becomes M at this point
-				IP.set(SBoxes.IP[i], bit64Message.get(SBoxes.IP[i]));
+				IP.set(SBoxes.IP[ff], bit64Message.get(SBoxes.IP[ff]));
 			// if(Debug)
-			System.out.println("IP binary is = " + IP.toString());
+			//System.out.println("IP binary is = " + IP.toString());
 			// This splits the 64-bit key into the to left and right keys of
 			// 32-bits
 			L0 = IP.get(0, 32);
@@ -331,13 +342,16 @@ public class DES_Skeleton {
 						+ FP.toByteArray() + "\nNow converting to HEX");
 			byte[] byteForm = FP.toByteArray();
 			// convert the byte array to hex and return
-			String finalFinalFinal = new BigInteger(byteForm).toString(10);
+			String finalFinalFinal = new BigInteger(byteForm).toString(16);
 			//if (Debug)
-				System.out.print("final result after everything = "
-						+ finalFinalFinal);
+				//System.out.print("final result after everything = "
+				//		+ finalFinalFinal + "\n");
+			
 			output.append(finalFinalFinal);
 		}// END OF BIG FOR LOOP
-		System.out.println("finished encrypt generator.");
+		
+		
+		System.out.println("finished encrypt generator. = "+ output.toString()+"");	
 		return output.toString();
 	}/* DES_encrypt */
 
@@ -349,26 +363,23 @@ public class DES_Skeleton {
 	 */
 	static BitSet fFunction(BitSet seg, int KNValue) {
 
-		System.out.println("Started fFunction");
+		//System.out.println("Started fFunction");
 
 		int i, rowValue, columnValue;
 
-		BitSet Eset = new BitSet(32);
-		BitSet EsetCopy = new BitSet(32);
+		BitSet Eset = new BitSet(48);
+		BitSet EsetCopy = new BitSet(48);
 		BitSet forPBox = new BitSet(32);
-		Eset = seg;
-		EsetCopy = BitSet.valueOf(seg.toString().getBytes());
+		Eset.or(seg);
+		EsetCopy.or(seg);
 		// we first get our E statement
 		for (i = 0; i < SBoxes.E.length; i++) {
 			Eset.set(SBoxes.E[i] - 1, EsetCopy.get(SBoxes.E[i] - 1));
 		}
 
-		BitSet key = new BitSet(64);
+		BitSet key = new BitSet(48);
 		key = BitSet.valueOf(KN[KNValue].toString().getBytes());
 		Eset.xor(key);
-
-		System.out.println("Key = " + key.toString() + "\nEset = "
-				+ Eset.toString());
 
 		for (i = 0; i < 8; i++) {
 
@@ -381,8 +392,9 @@ public class DES_Skeleton {
 			middleBit.or(Eset.get(1, 4));
 
 			// chop off the first 6 bits now
-			Eset = Eset.get(6, Eset.length());
+			Eset = Eset.get(6, (48)-(i*6));
 
+			//System.out.println(""+Eset.toString());
 			// time for BINARY MATH!
 			//convert the first and last bit into a numeric value
 			if (firstBit.get(0) == false && firstBit.get(1) == false) {
@@ -445,21 +457,31 @@ public class DES_Skeleton {
 					&& middleBit.get(2) == true && middleBit.get(3) == true) {
 				columnValue = 15;
 			}
-			System.out.println("rowNumber  = " + firstBit.toString()
-					+ "\ncolumnNumber = " + middleBit.toString());
+			
 			// now convert to decimal
-			int sBoxCell = columnValue * rowValue;
+			int sBoxCell = 0;
+			if(rowValue > 0 && columnValue > 0){
+			sBoxCell = columnValue * rowValue;
+			}
+			else if(rowValue < 0){
+				sBoxCell = columnValue;
+			}
+			else if(columnValue < 0){
+				sBoxCell = rowValue;
+			}
+			else{
+				sBoxCell = 0;
+			}
 			if (sBoxCell < 0 || sBoxCell > (16 * 4)) {
 				System.out.println("Error in fFunction at finding SBox Cell");
 				return null;
 			}
-			System.out.println("The value of the sBox" + sBoxCell);
 			// we use -1 because array index will be out of bounds otherwise
-			long[] tempByte = new long[1];
+			byte[] tempByte = new byte[1];
 			tempByte[0] = SBoxes.S[i][sBoxCell];
 			BitSet newValue = new BitSet(16);
 			newValue = BitSet.valueOf(tempByte);
-			System.out.println("sBoxResult = " + newValue.toString());
+			//System.out.println("sBoxResult = " + newValue.toString());
 			// now convert the integer to binary representation
 			for (int k = 0; k < 4; k++) {
 				forPBox.set((i * 4 + k), newValue.get(k));
@@ -468,11 +490,10 @@ public class DES_Skeleton {
 		BitSet finalResult = new BitSet(32);
 		for (i = 0; i < SBoxes.P.length; i++)
 			finalResult.set(SBoxes.P[i] - 1, forPBox.get(SBoxes.P[i] - 1));
-		System.out.println("fFunction ends.");
+		//System.out.println("fFunction ends.");
 		return finalResult;
 
 	}/* fFunction */
-
 	/**
  * 
  */
