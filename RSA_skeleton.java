@@ -3,7 +3,7 @@ import gnu.getopt.Getopt;
 import java.util.BitSet;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Base64.Encoder;
+//import java.util.Base64.Encoder;
 
 
 public class RSA_skeleton {
@@ -43,7 +43,7 @@ public class RSA_skeleton {
 		BigInteger e = new BigInteger(eStr.toString());
 		
 		//Compute C = M^e mod n.
-		BigInteger C = m.modPow(e, M);
+		BigInteger C = M.modPow(e, n);
 	}
 
 	private static void RSAdecrypt(StringBuilder cStr, StringBuilder nStr,
@@ -86,7 +86,11 @@ public class RSA_skeleton {
 		BigInteger e = BigInteger.probablePrime(eSmall, rand);
 		System.out.println("e = " + e);
 		
-		while( )
+		// while 1 < e < phi is not true we need a new value of phi we need to a new e
+		while((e.compareTo(new BigInteger("1")) < 0 || e.compareTo(phi) > 0) && (e.gcd(phi).compareTo(new BigInteger("1")) != 0)){
+			eSmall++;
+			e = BigInteger.probablePrime(eSmall, rand);
+		}
 		
 		// Compute d = e−1 mod phi(n).
 		//BigInteger d = e.subtract(new BigInteger("1")).mod(phi);
