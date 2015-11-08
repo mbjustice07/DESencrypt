@@ -19,6 +19,7 @@ public class RSA_skeleton {
 		pcl(args, bitSizeStr, nStr, dStr, eStr,m);
 		
 		if(!bitSizeStr.toString().equalsIgnoreCase("")){
+			System.out.println("The size is "+ bitSizeStr.toString());
 			//This means you want to create a new key
 			genRSAkey(bitSizeStr);
 		}
@@ -55,6 +56,7 @@ public class RSA_skeleton {
 		
 		// Compute M = C^d mod n.
 		BigInteger M = c.modPow(d, n);
+		return;
 	}
 	
 	private static void genRSAkey(StringBuilder bitSizeStr) {
@@ -68,10 +70,10 @@ public class RSA_skeleton {
 		//}
 		// TEST CASE
 		/**/
-		
+		System.out.println("The value is: "+Integer.getInteger(bitSizeStr.toString()));
 		// generate two large primes p and q
-		BigInteger p = BigInteger.probablePrime(Integer.getInteger(bitSizeStr.toString()), rand);
-		BigInteger q = BigInteger.probablePrime(Integer.getInteger(bitSizeStr.toString()), rand);
+		BigInteger p = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
+		BigInteger q = BigInteger.probablePrime(5, rand);
 		
 		// compute n = p*q
 		BigInteger n = p.multiply(q);
@@ -81,7 +83,7 @@ public class RSA_skeleton {
 		
 		// select a small odd integer e relatively prime with phi(n).
 		// TODO figure out what a small odd integer relatively prime is 
-		Integer eSmall = Integer.getInteger(bitSizeStr.toString()) % rand.nextInt();
+		Integer eSmall = new BigInteger(bitSizeStr.toString()).intValue() % rand.nextInt();
 		System.out.println("eSmall = " + eSmall);
 		BigInteger e = BigInteger.probablePrime(eSmall, rand);
 		System.out.println("e = " + e);
