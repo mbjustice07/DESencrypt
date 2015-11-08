@@ -19,7 +19,6 @@ public class RSA_skeleton {
 		pcl(args, bitSizeStr, nStr, dStr, eStr,m);
 		
 		if(!bitSizeStr.toString().equalsIgnoreCase("")){
-			System.out.println("The size is "+ bitSizeStr.toString());
 			//This means you want to create a new key
 			genRSAkey(bitSizeStr);
 		}
@@ -70,10 +69,10 @@ public class RSA_skeleton {
 		//}
 		// TEST CASE
 		/**/
-		System.out.println("The value is: "+Integer.getInteger(bitSizeStr.toString()));
+		
 		// generate two large primes p and q
 		BigInteger p = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
-		BigInteger q = BigInteger.probablePrime(5, rand);
+		BigInteger q = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
 		
 		// compute n = p*q
 		BigInteger n = p.multiply(q);
