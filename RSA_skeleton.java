@@ -1,5 +1,10 @@
 import gnu.getopt.Getopt;
 
+import java.util.BitSet;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Base64.Encoder;
+
 
 public class RSA_skeleton {
 
@@ -31,17 +36,66 @@ public class RSA_skeleton {
 
 
 
-	private static void RSAencrypt(StringBuilder m, StringBuilder nStr, StringBuilder eStr) {
-		// TODO Auto-generated method stub
+	private static void RSAencrypt(StringBuilder m, StringBuilder nStr, StringBuilder eStr) {		
+		// Get Bob’s public key PB = (e, n). 
+		BigInteger M = new BigInteger(m.toString());
+		BigInteger n = new BigInteger(nStr.toString());
+		BigInteger e = new BigInteger(eStr.toString());
+		
+		//Compute C = M^e mod n.
+		BigInteger C = m.modPow(e, M);
 	}
 
 	private static void RSAdecrypt(StringBuilder cStr, StringBuilder nStr,
 			StringBuilder dStr){
 		// TODO Auto-generated method stub
+		BigInteger c = new BigInteger(cStr.toString());
+		BigInteger n = new BigInteger(nStr.toString());
+		BigInteger d = new BigInteger(dStr.toString());
+		
+		// Compute M = C^d mod n.
+		BigInteger M = c.modPow(d, n);
 	}
 	
 	private static void genRSAkey(StringBuilder bitSizeStr) {
 		// TODO Auto-generated method stub
+		BigInteger tempInt = new BigInteger("" + System.currentTimeMillis()
+				+ "");
+		SecureRandom rand = new SecureRandom(tempInt.toByteArray());
+		//StringBuilder keyStr = new StringBuilder();
+		//for (int k = 0; k < 60; k++) {
+		//	keyStr.append("" + rand.nextInt(4) + "");
+		//}
+		// TEST CASE
+		/**/
+		
+		// generate two large primes p and q
+		BigInteger p = BigInteger.probablePrime(Integer.getInteger(bitSizeStr.toString()), rand);
+		BigInteger q = BigInteger.probablePrime(Integer.getInteger(bitSizeStr.toString()), rand);
+		
+		// compute n = p*q
+		BigInteger n = p.multiply(q);
+		
+		// compute phi(n) = (p - 1)(q - 1)
+		BigInteger phi = p.subtract(new BigInteger("1")).multiply(p.subtract(new BigInteger("1")));
+		
+		// select a small odd integer e relatively prime with phi(n).
+		// TODO figure out what a small odd integer relatively prime is 
+		Integer eSmall = Integer.getInteger(bitSizeStr.toString()) % rand.nextInt();
+		System.out.println("eSmall = " + eSmall);
+		BigInteger e = BigInteger.probablePrime(eSmall, rand);
+		System.out.println("e = " + e);
+		
+		while( )
+		
+		// Compute d = e−1 mod phi(n).
+		//BigInteger d = e.subtract(new BigInteger("1")).mod(phi);
+		BigInteger d = e.modInverse(phi);
+		// PB = (e, n) is Bob’s RSA public key.
+		
+		// SB = (d , n) is Bob’ RSA private key.
+		
+		
 	}
 
 
