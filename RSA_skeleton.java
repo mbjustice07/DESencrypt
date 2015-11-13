@@ -16,9 +16,16 @@ public class RSA_skeleton {
 		StringBuilder eStr = new StringBuilder();
 		StringBuilder m = new StringBuilder();
 		
-		pcl(args, bitSizeStr, nStr, dStr, eStr,m);
+		if(!pcl(args, bitSizeStr, nStr, dStr, eStr,m)){
+			//if getopts throws a fit, stop running
+			return;
+		}
+		System.out.println(bitSizeStr.toString());
 		
 		if(!bitSizeStr.toString().equalsIgnoreCase("")){
+			//bitSizeStr will either have a value of 1024 or whatever arg was
+			//need to check if arg is an actual value
+			
 			//This means you want to create a new key
 			genRSAkey(bitSizeStr);
 		}
@@ -44,6 +51,8 @@ public class RSA_skeleton {
 		
 		//Compute C = M^e mod n.
 		BigInteger C = M.modPow(e, n);
+		
+		//need to pass this out
 	}
 
 	private static void RSAdecrypt(StringBuilder cStr, StringBuilder nStr,
@@ -60,8 +69,7 @@ public class RSA_skeleton {
 	
 	private static void genRSAkey(StringBuilder bitSizeStr) {
 		// TODO Auto-generated method stub
-		BigInteger tempInt = new BigInteger("" + System.currentTimeMillis()
-				+ "");
+		BigInteger tempInt = new BigInteger("" + System.currentTimeMillis());
 		SecureRandom rand = new SecureRandom(tempInt.toByteArray());
 		//StringBuilder keyStr = new StringBuilder();
 		//for (int k = 0; k < 60; k++) {
@@ -70,9 +78,17 @@ public class RSA_skeleton {
 		// TEST CASE
 		/**/
 		
+		
+		//TODO, fix the numberFormatError when bitSizeStr is not a numeric value and replace it with 1024
+		try{
 		// generate two large primes p and q
-		BigInteger p = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
-		BigInteger q = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
+			new BigInteger(bitSizeStr.toString()).intValue();
+		}
+		catch(NumberFormatException e){
+			bitSizeStr = new StringBuilder("" + 1024);
+		}
+			BigInteger p = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
+			BigInteger q = BigInteger.probablePrime(new BigInteger(bitSizeStr.toString()).intValue(), rand);
 		
 		// compute n = p*q
 		BigInteger n = p.multiply(q);
@@ -81,17 +97,21 @@ public class RSA_skeleton {
 		BigInteger phi = p.subtract(new BigInteger("1")).multiply(p.subtract(new BigInteger("1")));
 		
 		// select a small odd integer e relatively prime with phi(n).
-		// TODO figure out what a small odd integer relatively prime is 
+		// TODO figure out what is a small odd integer relatively prime
 		Integer eSmall = new BigInteger(bitSizeStr.toString()).intValue() % rand.nextInt();
-		System.out.println("eSmall = " + eSmall);
 		BigInteger e = BigInteger.probablePrime(eSmall, rand);
+	    System.out.println("eSmall = " + eSmall);
 		System.out.println("e = " + e);
 		
+		//TODO, figure out why eSmall is being incremented.
+		//TODO, if eSmall is actually prime relatively to phi
 		// while 1 < e < phi is not true we need a new value of phi we need to a new e
 		while((e.compareTo(new BigInteger("1")) < 0 || e.compareTo(phi) > 0) && (e.gcd(phi).compareTo(new BigInteger("1")) != 0)){
 			eSmall++;
 			e = BigInteger.probablePrime(eSmall, rand);
 		}
+		System.out.println("eSmall = " + eSmall);
+		System.out.println("e = " + e);
 		
 		// Compute d = e−1 mod phi(n).
 		//BigInteger d = e.subtract(new BigInteger("1")).mod(phi);
@@ -107,7 +127,7 @@ public class RSA_skeleton {
 	/**
 	 * This function Processes the Command Line Arguments.
 	 */
-	private static void pcl(String[] args, StringBuilder bitSizeStr,
+	private static boolean pcl(String[] args, StringBuilder bitSizeStr,
 							StringBuilder nStr, StringBuilder dStr, StringBuilder eStr,
 							StringBuilder m) {
 		/*
@@ -116,6 +136,8 @@ public class RSA_skeleton {
 		Getopt g = new Getopt("Chat Program", args, "hke:d:b:n:i:");
 		int c;
 		String arg;
+		bitSizeStr.append("1024");
+		
 		while ((c = g.getopt()) != -1){
 		     switch(c){
 		     	  case 'i':
@@ -137,17 +159,21 @@ public class RSA_skeleton {
 		          case 'k':
 		        	  break;
 		     	  case 'b':
+		     		  bitSizeStr.delete(0, 4);
+		     		  //a key has been requested of the specified size.
 		        	  arg = g.getOptarg();
 		        	  bitSizeStr.append(arg);
 		        	  break;
 		          case 'h':
 		        	  callUsage(0);
 		          case '?':
-		            break; // getopt() already printed an error
+		        	return false;
+		            // getopt() already printed an error
 		          default:
 		              break;
 		       }
 		   }
+		   return true;
 	}
 	
 	private static void callUsage(int exitStatus) {
